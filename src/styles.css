@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   SiteLedger design tokens.
+   Every colour, radius, shadow and type step in the product resolves to one of
+   these variables. Components must never contain a raw hex value.
+   Dark mode is deliberately out of scope for Phase 1.
+--------------------------------------------------------------------------- */
+@theme {
+  /* Ink (text) */
+  --color-ink: #17212b;
+  --color-ink-muted: #5a6b7a;
+  --color-ink-faint: #8b99a6;
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f3f5f7;
+  --color-surface-sunken: #e9edf1;
+
+  /* Borders */
+  --color-border: #dce3e9;
+  --color-border-strong: #b9c4ce;
+
+  /* Brand / primary action */
+  --color-primary: #1b4965;
+  --color-primary-hover: #14384e;
+  --color-primary-subtle: #e7eef4;
+
+  /* Status. Never used decoratively, always paired with a text label. */
+  --color-status-ontrack: #0f7b4f;
+  --color-status-risk: #b26a00;
+  --color-status-delayed: #b02a20;
+  --color-status-idle: #6b7a88;
+
+  --color-focus-ring: #1b4965;
+
+  /* Radii: 6px controls, 10px cards, 0 on table rows. One radius per role. */
+  --radius-control: 6px;
+  --radius-card: 10px;
+
+  /* The single shadow token, used only on overlays and popovers. */
+  --shadow-overlay: 0 8px 24px -6px rgb(23 33 43 / 0.18), 0 2px 6px -2px rgb(23 33 43 / 0.10);
+
+  /* Type scale in rem, exactly as specified. */
+  --text-2xs: 0.75rem;
+  --text-xs: 0.875rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+
+  --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Tamil', 'IBM Plex Sans Devanagari',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-surface-subtle);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Columns of numbers must align, everywhere they appear. */
+  .tabular,
+  table td,
+  table th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Visible focus ring on every interactive element, no exceptions. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-control);
+  }
+
+  /* Motion only on user-caused state changes, and never for users who opt out. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Prose line length never exceeds 72 characters. */
+  .measure {
+    max-width: 72ch;
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-sunken) 25%,
+      var(--color-surface-subtle) 37%,
+      var(--color-surface-sunken) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+
+  /* Minimum 44x44px touch target on the site shell. */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
