@@ -1,0 +1,13 @@
+# Tests must never become live endpoints. The first deployment shipped
+# api/proxy.test.ts as a public function, which this prevents.
+**/*.test.ts
+**/*.test.tsx
+
+# Not needed to build or serve the application.
+#
+# The leading slash anchors each pattern to the repository root, and it is not
+# optional: a bare `supabase` matches at any depth and would also exclude
+# src/lib/supabase, which broke the build the first time this file was written.
+/docs
+/supabase
+/.claude
