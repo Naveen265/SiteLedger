@@ -45,7 +45,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       unwrap(
         await supabase
           .from('company_members')
-          .select('*, profile:profiles(*)')
+          // Named explicitly for the same reason as in AuthContext: two
+          // foreign keys from company_members reach profiles.
+          .select('*, profile:profiles!company_members_profile_id_fkey(*)')
           .eq('company_id', companyId!)
           .order('created_at'),
       ) as CompanyMember[],

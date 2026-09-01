@@ -21,7 +21,7 @@ import { AuthLayout } from '../components/AuthLayout';
 export function SignInPage() {
   const t = useTranslate();
   const navigate = useNavigate();
-  const { signIn, verifyCode } = useAuth();
+  const { signIn, verifyCode, error: authError } = useAuth();
   const { notify } = useToast();
   const [awaitingCode, setAwaitingCode] = useState(false);
   const [code, setCode] = useState('');
@@ -93,6 +93,13 @@ export function SignInPage() {
         </div>
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+          {/* A sign-in can succeed and still fail to load the membership that
+              decides where to land. Saying so beats an inert screen. */}
+          {authError && (
+            <p role="alert" className="measure text-2xs text-status-delayed">
+              {authError}
+            </p>
+          )}
           <Input
             label={usesPhone ? t('auth.phoneLabel') : t('auth.emailLabel')}
             type={usesPhone ? 'tel' : 'email'}

@@ -51,8 +51,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadSessionUser = useCallback(async (authUserId: string): Promise<SessionUser | null> => {
     const { data, error: loadError } = await supabase
       .from('company_members')
+      // The foreign key is named explicitly because company_members has two
+      // references to profiles, profile_id and invited_by. Without it
+      // PostgREST cannot choose between them and answers PGRST201, which
+      // presents as a sign-in that authenticates and then does nothing.
+      // Written as one literal because the client parses this string to infer
+      // the result type; a concatenation degrades it to an error type.
       .select(
-        'company_id, role, site_level, status, profile:profiles!inner(id, full_name, phone, email, avatar_url, locale)',
+        'company_id, role, site_level, status, profile:profiles!company_members_profile_id_fkey(id, full_name, phone, email, avatar_url, locale)',
       )
       .eq('profile_id', authUserId)
       .eq('status', 'active')
@@ -61,7 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (loadError) throw new Error(toUserMessage(loadError));
     if (!data) return null;
 
-    const profile = data.profile as unknown as SessionUser;
+    // The profile row is created by a trigger on auth.users, so its absence
+    // means the trigger did not run rather than a normal empty result.
+    const profile = data.profile as unknown as SessionUser | null;
+    if (!profile) {
+      throw new Error(
+        'Your profile record is missing. Sign out and sign in again, or ask an owner to re-invite you.',
+      );
+    }
+
     return {
       id: profile.id,
       full_name: profile.full_name,
