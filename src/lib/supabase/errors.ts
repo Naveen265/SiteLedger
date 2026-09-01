@@ -14,12 +14,64 @@ const CODE_MESSAGES: Record<string, string> = {
   PGRST116: 'That record was not found. It may have been archived by someone else.',
 };
 
+/**
+ * Messages Supabase returns that need translating into something actionable.
+ * Matched on a fragment because the exact wording varies between versions.
+ */
+const MESSAGE_PATTERNS: Array<{ match: RegExp; message: string }> = [
+  {
+    // Supabase's built-in mail service allows only a few messages per hour,
+    // which is easy to exhaust while setting a project up.
+    match: /email rate limit|over_email_send_rate_limit/i,
+    message:
+      'Too many confirmation emails have been sent from this project in the last hour. ' +
+      'Wait an hour, or turn off email confirmation in Supabase under Authentication, ' +
+      'Sign in and up, so no email is needed.',
+  },
+  {
+    match: /for security purposes.*after (\d+) seconds?/i,
+    message: 'That was requested too recently. Wait a minute and try again.',
+  },
+  {
+    match: /rate limit|too many requests/i,
+    message: 'Too many attempts in a short time. Wait a few minutes and try again.',
+  },
+  {
+    match: /user already registered|already been registered/i,
+    message:
+      'An account already exists for this email. Sign in instead, or reset the password if you have forgotten it.',
+  },
+  {
+    match: /email not confirmed/i,
+    message:
+      'This email has not been confirmed yet. Open the link in the confirmation email, then sign in.',
+  },
+  {
+    match: /email address .* is invalid|email_address_invalid/i,
+    message: 'That email address was rejected. Use a real address you can receive mail at.',
+  },
+];
+
 /** Extracts a user-facing message from any thrown value. */
 export function toUserMessage(error: unknown): string {
   if (!error) return 'Could not complete the action. Try again.';
 
   const postgrest = error as Partial<PostgrestError>;
   if (postgrest?.code && CODE_MESSAGES[postgrest.code]) return CODE_MESSAGES[postgrest.code];
+
+  // Auth failures arrive as plain messages rather than codes, so they are
+  // matched on their text before anything else is tried.
+  const raw =
+    error instanceof Error
+      ? error.message
+      : typeof (error as { message?: unknown })?.message === 'string'
+        ? String((error as { message: string }).message)
+        : '';
+
+  if (raw) {
+    const known = MESSAGE_PATTERNS.find((pattern) => pattern.match.test(raw));
+    if (known) return known.message;
+  }
 
   if (error instanceof Error) {
     if (error.message.includes('Failed to fetch')) {
