@@ -1,12 +1,17 @@
 node_modules
 dist
 dist-ssr
-*.local
-.env
-.env.local
-.env.*.local
-.DS_Store
-coverage
-.vercel
-*.tsbuildinfo
 dev-dist
+coverage
+*.tsbuildinfo
+.DS_Store
+*.local
+
+# Environment files hold credentials and are never committed. The example file
+# is the exception: it documents the keys without carrying any values.
+.env
+.env*
+!.env.example
+
+# Vercel CLI state, including the OIDC token it writes.
+.vercel
