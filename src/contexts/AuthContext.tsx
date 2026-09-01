@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Written as one literal because the client parses this string to infer
       // the result type; a concatenation degrades it to an error type.
       .select(
-        'company_id, role, site_level, status, profile:profiles!company_members_profile_id_fkey(id, full_name, phone, email, avatar_url, locale)',
+        'company_id, role, site_level, status, username, profile:profiles!company_members_profile_id_fkey(id, full_name, phone, email, avatar_url, locale, must_change_password)',
       )
       .eq('profile_id', authUserId)
       .eq('status', 'active')
@@ -87,6 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: data.role,
       site_level: data.site_level,
       status: data.status,
+      username: data.username ?? null,
+      must_change_password: profile.must_change_password ?? false,
     };
   }, []);
 

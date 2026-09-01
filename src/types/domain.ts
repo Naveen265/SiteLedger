@@ -23,6 +23,8 @@ export type Company = TenantRow & {
   gstin: string | null;
   address: string | null;
   logo_url: string | null;
+  /** Short code staff type when signing in. Part of their derived login address. */
+  code: string | null;
   default_locale: string;
   settings: Record<string, unknown> | null;
 };
@@ -33,6 +35,8 @@ export type Profile = BaseRow & {
   email: string | null;
   avatar_url: string | null;
   locale: string;
+  /** True after an owner issues or resets a password. Blocks the app until changed. */
+  must_change_password: boolean;
 };
 
 export type CompanyMember = TenantRow & {
@@ -41,6 +45,7 @@ export type CompanyMember = TenantRow & {
   site_level: SiteLevel | null;
   status: MemberStatus;
   invited_by: string | null;
+  username: string | null;
   profile?: Profile;
 };
 
@@ -385,4 +390,7 @@ export type SessionUser = {
   role: Role;
   site_level: SiteLevel | null;
   status: MemberStatus;
+  /** Login name within the company, for staff accounts issued by an owner. */
+  username: string | null;
+  must_change_password: boolean;
 };

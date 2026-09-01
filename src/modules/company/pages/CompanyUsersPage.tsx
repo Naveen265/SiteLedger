@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
-import { UserPlus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { KeyRound, UserPlus } from 'lucide-react';
 import { PageHeader } from '@/components/patterns/PageHeader';
 import { DataTable, type Column } from '@/components/patterns/DataTable';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -13,6 +14,8 @@ import { formatPaise } from '@/lib/format/currency';
 import { roleLabelKey } from '@/lib/auth/permissions';
 import { APPROVAL_KINDS } from '@/types/enums';
 import type { CompanyMember } from '@/types/domain';
+import { AddTeamMemberDialog } from '../components/AddTeamMemberDialog';
+import { useResetTeamPassword, useSetTeamMemberStatus } from '../hooks/useTeam';
 
 /**
  * Company users and approval thresholds.
@@ -21,8 +24,23 @@ import type { CompanyMember } from '@/types/domain';
  */
 export function CompanyUsersPage() {
   const t = useTranslate();
-  const { can } = useAuth();
-  const { members, thresholds, isLoading, isError } = useCompany();
+  const { can, user } = useAuth();
+  const { members, thresholds, company, isLoading, isError } = useCompany();
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const resetPassword = useResetTeamPassword();
+  const setStatus = useSetTeamMemberStatus();
+
+  /**
+   * Owners are the recovery path for staff, who have no email to reset
+   * against. The new password is typed here and handed over in person.
+   */
+  const onResetPassword = async (member: CompanyMember) => {
+    const next = window.prompt(
+      `${t('team.resetPassword')} — ${member.profile?.full_name ?? ''}\n${t('team.tempPasswordHint')}`,
+    );
+    if (!next) return;
+    await resetPassword.mutateAsync({ profileId: member.profile_id, password: next });
+  };
 
   const columns = useMemo<Column<CompanyMember>[]>(
     () => [
@@ -35,8 +53,12 @@ export function CompanyUsersPage() {
         render: (member) => t(roleLabelKey(member.role, member.site_level)),
       },
       {
-        key: 'contact', header: t('common.email'), hideOnMobile: true,
-        render: (member) => member.profile?.email ?? member.profile?.phone ?? '-',
+        key: 'username', header: t('auth.usernameLabel'),
+        // Staff sign in with this; owners who signed up themselves use email.
+        render: (member) =>
+          member.username
+            ? <code className="text-2xs">{member.username}</code>
+            : (member.profile?.email ?? '-'),
       },
       {
         key: 'status', header: t('common.status'),
@@ -48,8 +70,38 @@ export function CompanyUsersPage() {
           />
         ),
       },
+      {
+        key: 'actions', header: t('common.actions'), align: 'right',
+        render: (member) =>
+          can('company.manageUsers') && member.profile_id !== user?.id ? (
+            <div className="flex justify-end gap-2">
+              <AsyncButton
+                size="sm"
+                variant="secondary"
+                icon={<KeyRound className="size-3.5" />}
+                onClick={() => onResetPassword(member)}
+              >
+                {t('team.resetPassword')}
+              </AsyncButton>
+              <AsyncButton
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  setStatus.mutateAsync({
+                    profileId: member.profile_id,
+                    status: member.status === 'active' ? 'disabled' : 'active',
+                  })
+                }
+              >
+                {member.status === 'active' ? t('team.deactivate') : t('team.reactivate')}
+              </AsyncButton>
+            </div>
+          ) : null,
+      },
     ],
-    [t],
+    // onResetPassword and the mutations are stable for the table's lifetime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t, can, user?.id],
   );
 
   return (
@@ -58,8 +110,8 @@ export function CompanyUsersPage() {
         title={t('company.usersTitle')}
         actions={
           can('company.manageUsers') && (
-            <Button icon={<UserPlus className="size-4" />} disabled>
-              {t('company.inviteUser')}
+            <Button icon={<UserPlus className="size-4" />} onClick={() => setIsAddOpen(true)}>
+              {t('team.addMember')}
             </Button>
           )
         }
@@ -73,6 +125,16 @@ export function CompanyUsersPage() {
         isError={isError}
         emptyMessage={t('company.emptyUsers')}
       />
+
+      {company?.code && (
+        <p className="text-2xs text-ink-muted">
+          {t('auth.companyCodeLabel')}:{' '}
+          <code className="font-mono font-semibold text-ink">{company.code}</code>
+          {' — '}{t('auth.signInStaffHint')}
+        </p>
+      )}
+
+      <AddTeamMemberDialog open={isAddOpen} onClose={() => setIsAddOpen(false)} />
 
       <Card className="max-w-xl">
         <CardHeader title={t('company.thresholds')} subtitle={t('company.thresholdHelp')} />

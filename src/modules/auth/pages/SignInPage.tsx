@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signInSchema, type SignInFormInput } from '@/lib/validation';
 import { env } from '@/config/env';
+import { buildTeamEmail, looksLikeEmail } from '@/lib/auth/teamCredentials';
 import { routes } from '@/config/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslate } from '@/contexts/I18nContext';
@@ -26,6 +27,9 @@ export function SignInPage() {
   const [awaitingCode, setAwaitingCode] = useState(false);
   const [code, setCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  // Staff sign in with the company code their owner gave them. Owners, who
+  // signed up themselves, type an email and leave this blank.
+  const [companyCode, setCompanyCode] = useState('');
 
   const usesPhone = env.phoneAuthEnabled;
 
@@ -37,7 +41,14 @@ export function SignInPage() {
   /** Starts sign-in, then either lands or waits for the one time code. */
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const result = await signIn(values.identifier, values.password);
+      // An identifier containing @ is an email. Anything else is a username,
+      // which becomes an address by pairing it with the company code.
+      const identifier =
+        !usesPhone && !looksLikeEmail(values.identifier) && companyCode.trim()
+          ? buildTeamEmail(companyCode, values.identifier)
+          : values.identifier;
+
+      const result = await signIn(identifier, values.password);
       if (result.requiresVerification) {
         setAwaitingCode(true);
         notify(t('auth.otpSent'), 'info');
@@ -100,11 +111,30 @@ export function SignInPage() {
               {authError}
             </p>
           )}
+          {!usesPhone && (
+            <Input
+              label={t('auth.companyCodeLabel')}
+              hint={t('auth.signInStaffHint')}
+              autoCapitalize="characters"
+              autoComplete="organization"
+              value={companyCode}
+              onChange={(event) => setCompanyCode(event.target.value)}
+            />
+          )}
+
           <Input
-            label={usesPhone ? t('auth.phoneLabel') : t('auth.emailLabel')}
-            type={usesPhone ? 'tel' : 'email'}
-            inputMode={usesPhone ? 'numeric' : 'email'}
-            autoComplete={usesPhone ? 'tel' : 'email'}
+            label={
+              usesPhone
+                ? t('auth.phoneLabel')
+                : companyCode.trim()
+                  ? t('auth.usernameLabel')
+                  : t('auth.emailLabel')
+            }
+            type={usesPhone ? 'tel' : companyCode.trim() ? 'text' : 'email'}
+            inputMode={usesPhone ? 'numeric' : 'text'}
+            autoComplete={usesPhone ? 'tel' : 'username'}
+            autoCapitalize="none"
+            spellCheck={false}
             error={formState.errors.identifier?.message}
             {...register('identifier')}
           />
@@ -123,14 +153,21 @@ export function SignInPage() {
             {usesPhone ? t('auth.sendOtp') : t('auth.signIn')}
           </Button>
 
-          {!usesPhone && (
-            <Link
-              to={routes.forgotPassword}
-              className="text-center text-2xs text-ink-muted underline underline-offset-2"
-            >
-              {t('auth.forgotPassword')}
-            </Link>
-          )}
+          {!usesPhone &&
+            (companyCode.trim() ? (
+              // Staff accounts have no self-service reset by design: the owner
+              // is the recovery path, so saying so beats a dead link.
+              <p className="measure text-center text-2xs text-ink-muted">
+                {t('auth.forgotStaff')}
+              </p>
+            ) : (
+              <Link
+                to={routes.forgotPassword}
+                className="text-center text-2xs text-ink-muted underline underline-offset-2"
+              >
+                {t('auth.forgotPassword')}
+              </Link>
+            ))}
         </form>
       )}
     </AuthLayout>

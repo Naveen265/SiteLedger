@@ -121,7 +121,16 @@
     "acceptInvite": "Accept invitation",
     "inviteIntro": "You have been invited to join a company on SiteLedger.",
     "confirmEmailSent": "Check your email and open the confirmation link. Then sign in, and we will finish setting up your company.",
-    "createCompanyHint": "Your account is ready. Name your company to finish setting up."
+    "createCompanyHint": "Your account is ready. Name your company to finish setting up.",
+    "usernameLabel": "Username",
+    "companyCodeLabel": "Company code",
+    "signInStaffHint": "Your company code and username were given to you by your owner.",
+    "changePasswordTitle": "Choose your password",
+    "changePasswordBody": "You are signing in with a password your owner set. Choose your own to continue.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Both passwords must match.",
+    "forgotStaff": "Forgotten your password? Ask your owner to set a new one."
   },
   "nav": {
     "myCompany": "My company",
@@ -599,5 +608,21 @@
       "title": "Needed by",
       "body": "What this shows: the date the site actually needs the material in hand, not the date it was requested. How it is used: it drives the ordering priority on the procurement desk and flags requests that will arrive late. What is excluded: it is not a promise date from the vendor, that is the expected delivery on the purchase order."
     }
+  },
+  "team": {
+    "title": "Team",
+    "addMember": "Add team member",
+    "resetPassword": "Reset password",
+    "passwordReset": "Password updated. They must change it on next sign-in.",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "created": "Account created. Give them these details.",
+    "usernameHint": "Lowercase letters, numbers, dots, dashes. They type this to sign in.",
+    "tempPassword": "Password",
+    "tempPasswordHint": "At least 8 characters. They will be asked to change it.",
+    "projects": "Projects they can see",
+    "noCode": "Set a company code before adding people.",
+    "companyCode": "Company code",
+    "copyDetails": "Copy sign-in details"
   }
 }

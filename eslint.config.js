@@ -45,4 +45,12 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Placed last so it overrides the rule above: flat config is order
+    // sensitive. api/ runs on the server and is the one place the service role
+    // key may legitimately be read. The ban stays in force for everything that
+    // ships to a browser.
+    files: ['api/**/*.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
 );

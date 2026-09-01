@@ -5,6 +5,7 @@ import { usesSiteShell } from '@/lib/auth/permissions';
 import { routes } from '@/config/routes';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { NoCompanyPage } from '@/modules/auth/pages/NoCompanyPage';
+import { ChangePasswordPage } from '@/modules/auth/pages/ChangePasswordPage';
 
 /**
  * Route guards.
@@ -43,6 +44,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }
 
   if (!user) return <NoCompanyPage />;
+
+  // A password the owner knows must not stay in use. This takes precedence
+  // over every route, including the site shell.
+  if (user.must_change_password) return <ChangePasswordPage />;
 
   return <>{children}</>;
 }
