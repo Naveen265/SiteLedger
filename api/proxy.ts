@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import process from 'node:process';
 
@@ -159,6 +160,36 @@ export function normalisePath(raw: string): string {
 }
 
 /**
+ * Collects the request body.
+ *
+ * Buffered rather than streamed. Streaming with `Readable.toWeb` plus
+ * `duplex: 'half'` failed on this runtime, and the platform may already have
+ * consumed the stream into `req.body`, which a stream forward would silently
+ * turn into an empty request. Both cases are handled here.
+ *
+ * The cost is that an upload is held in memory. The largest object the product
+ * accepts is a 25 MB document, which is comfortably within a function's
+ * memory, so correctness is worth more than the saving.
+ */
+async function readBody(req: IncomingMessage): Promise<Buffer | undefined> {
+  if (req.method === 'GET' || req.method === 'HEAD') return undefined;
+
+  // Some runtimes parse the body before the handler runs.
+  const parsed = (req as IncomingMessage & { body?: unknown }).body;
+  if (parsed !== undefined && parsed !== null) {
+    if (Buffer.isBuffer(parsed)) return parsed;
+    if (typeof parsed === 'string') return Buffer.from(parsed);
+    return Buffer.from(JSON.stringify(parsed));
+  }
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string));
+  }
+  return chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+}
+
+/**
  * An error body carrying every key the Supabase clients look for.
  * PostgREST reads `message`, GoTrue reads `msg` and `error_description`, so a
  * proxy failure surfaces as readable copy rather than "[object Object]".
@@ -246,19 +277,22 @@ export default async function handler(
     headers.set('authorization', `Bearer ${supabaseKey}`);
   }
 
-  const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
-
   try {
+    const body = await readBody(req);
+
+    // Set the length explicitly. It was stripped from the forwarded headers
+    // because the incoming value describes the original framing, and a stale
+    // one makes the upstream wait for bytes that never arrive.
+    if (body) headers.set('content-length', String(body.byteLength));
+
     const upstream = await fetch(target, {
       method: req.method,
       headers,
-      // The request is streamed rather than buffered, so a large document
-      // upload never has to fit in this function's memory.
-      body: hasBody ? (Readable.toWeb(req) as ReadableStream) : undefined,
-      // Required by undici whenever a streaming body is forwarded.
-      duplex: 'half',
+      // A Buffer is a Uint8Array at runtime, which fetch accepts; the DOM
+      // BodyInit type does not model Node's Buffer, hence the view.
+      body: body ? new Uint8Array(body) : undefined,
       redirect: 'manual',
-    } as RequestInit);
+    });
 
     res.statusCode = upstream.status;
     upstream.headers.forEach((value, key) => {
@@ -273,7 +307,15 @@ export default async function handler(
     }
 
     Readable.fromWeb(upstream.body as Parameters<typeof Readable.fromWeb>[0]).pipe(res);
-  } catch {
+  } catch (error) {
+    // Logged server-side so a failure here is diagnosable from the function
+    // logs. Swallowing it silently cost a debugging round trip once already.
+    console.error('Supabase proxy request failed', {
+      method: req.method,
+      path,
+      message: error instanceof Error ? error.message : String(error),
+      cause: error instanceof Error ? String(error.cause ?? '') : '',
+    });
     sendError(res, 502, 'Could not reach the database. Check your connection and try again.');
   }
 }

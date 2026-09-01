@@ -119,7 +119,9 @@
     "otpSent": "We sent a code to your mobile number.",
     "noMembership": "Your account is not linked to a company yet. Ask an owner to invite you.",
     "acceptInvite": "Accept invitation",
-    "inviteIntro": "You have been invited to join a company on SiteLedger."
+    "inviteIntro": "You have been invited to join a company on SiteLedger.",
+    "confirmEmailSent": "Check your email and open the confirmation link. Then sign in, and we will finish setting up your company.",
+    "createCompanyHint": "Your account is ready. Name your company to finish setting up."
   },
   "nav": {
     "myCompany": "My company",

@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usesSiteShell } from '@/lib/auth/permissions';
 import { routes } from '@/config/routes';
 import { DashboardSkeleton } from '@/components/skeletons';
+import { NoCompanyPage } from '@/modules/auth/pages/NoCompanyPage';
 
 /**
  * Route guards.
@@ -19,23 +20,38 @@ export function homePathForRole(role: string): string {
   return routes.projects;
 }
 
-/** Blocks a route until the user is signed in and has a company membership. */
+/**
+ * Blocks a route until the user is signed in and has a company membership.
+ *
+ * Being signed in and having a company are two different things, and they must
+ * be handled differently. A user with a session but no active membership has
+ * either been invited and not yet activated, or signed up while email
+ * confirmation was required, which defers company creation to the first
+ * sign-in. Sending them to sign in again would loop: they are already signed
+ * in, so the sign-in screen would bounce them straight back.
+ */
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, isReady } = useAuth();
+  const { user, session, isReady } = useAuth();
   const location = useLocation();
 
   // Wait for the stored session to resolve before deciding anything, so a
   // signed-in user is never bounced to sign-in on a refresh.
   if (!isReady) return <div className="p-6"><DashboardSkeleton /></div>;
 
-  if (!user) {
+  if (!session) {
     return <Navigate to={routes.signIn} state={{ from: location.pathname }} replace />;
   }
+
+  if (!user) return <NoCompanyPage />;
 
   return <>{children}</>;
 }
 
-/** Sends an already signed-in user away from the sign-in screens. */
+/**
+ * Sends an already signed-in user away from the sign-in screens.
+ * A session without a membership is deliberately allowed through to the
+ * sign-up screen, so someone mid-way through setup is never trapped.
+ */
 export function RedirectIfAuthenticated({ children }: { children: ReactNode }) {
   const { user, isReady } = useAuth();
   if (!isReady) return null;

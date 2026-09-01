@@ -20,15 +20,22 @@ export const emailPasswordProvider: AuthProvider = {
     return { requiresVerification: false };
   },
 
-  /** Creates the auth user and seeds the profile name used across the app. */
+  /**
+   * Creates the auth user and seeds the profile name used across the app.
+   *
+   * Reports whether a session was established. When the project requires email
+   * confirmation, Supabase returns a user but no session, and the caller must
+   * not go on to create the company: that write needs an authenticated session
+   * and would fail, leaving an account with no company attached.
+   */
   async signUp({ identifier, password, fullName }: SignUpInput) {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: identifier,
       password: password ?? '',
       options: { data: { full_name: fullName } },
     });
     if (error) throw new Error(toUserMessage(error));
-    return { requiresVerification: false };
+    return { requiresVerification: !data.session };
   },
 
   /** Sends a reset link back to the app's reset route. */
