@@ -4,6 +4,11 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
+/** Resolves a path relative to this config file, without relying on __dirname. */
+function fromRoot(relative: string): string {
+  return path.resolve(import.meta.dirname, relative);
+}
+
 /**
  * Vite configuration.
  *
@@ -13,8 +18,20 @@ import path from 'node:path';
  * `import.meta.env` values, and only `VITE_` prefixed variables are eligible
  * for that. Nothing here reaches a bundle.
  */
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+
+  // A missing project URL would otherwise surface much later as an unexplained
+  // proxy failure on the first sign-in attempt. Say so now, and say where to
+  // fix it. Only the dev server needs this; a production build does not, since
+  // the credentials are read by the Vercel Function at request time.
+  if (command === 'serve' && !env.SUPABASE_URL) {
+    throw new Error(
+      'Missing SUPABASE_URL. Copy .env.example to .env.local and fill in your ' +
+        'Supabase project URL and anon key. Both are server-side only and are ' +
+        'never sent to the browser.',
+    );
+  }
 
   return {
   plugins: [
@@ -54,7 +71,7 @@ export default defineConfig(({ mode }) => {
     }),
   ],
   resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
+    alias: { '@': fromRoot('./src') },
   },
 
   server: {
