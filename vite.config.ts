@@ -1,12 +1,22 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
-// Vite configuration: React SWC/Babel plugin, Tailwind v4 engine, PWA service worker,
-// and a `@` alias that maps to `src` so imports never contain `../../..` chains.
-export default defineConfig({
+/**
+ * Vite configuration.
+ *
+ * `loadEnv` is called with an empty prefix so this file can read the two
+ * server-side Supabase variables. They are used only to configure the dev
+ * proxy below and are never exposed to client code: Vite inlines
+ * `import.meta.env` values, and only `VITE_` prefixed variables are eligible
+ * for that. Nothing here reaches a bundle.
+ */
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
   plugins: [
     react(),
     tailwindcss(),
@@ -46,6 +56,33 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
+
+  server: {
+    /**
+     * The development stand-in for `api/supabase/[...path].ts`.
+     * Vite does not run Vercel Functions, so the same credential injection is
+     * reproduced here. Behaviour matches production: the browser only ever
+     * talks to localhost, and the key is attached by the dev server.
+     */
+    proxy: {
+      '/api/supabase': {
+        target: env.SUPABASE_URL,
+        changeOrigin: true,
+        secure: true,
+        rewrite: (requestPath: string) => requestPath.replace(/^\/api\/supabase/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('apikey', env.SUPABASE_ANON_KEY ?? '');
+            // Preserve the signed-in user's own token so Row Level Security
+            // applies to them, exactly as it does in production.
+            if (!proxyReq.getHeader('authorization')) {
+              proxyReq.setHeader('authorization', `Bearer ${env.SUPABASE_ANON_KEY ?? ''}`);
+            }
+          });
+        },
+      },
+    },
+  },
   build: {
     // Split the heavy, rarely-changing libraries out of the main bundle so the
     // site shell stays small on low-end Android devices.
@@ -63,4 +100,5 @@ export default defineConfig({
       },
     },
   },
+  };
 });

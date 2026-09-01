@@ -85,6 +85,46 @@ password ships enabled; phone and OTP is selected by setting
 `VITE_AUTH_PHONE_ENABLED=true`. Turning on SMS later is a configuration change,
 not a rewrite.
 
+## Supabase credentials are proxied, not published
+
+Supabase is designed for the anon key to be public: Row Level Security is the
+boundary, and the key identifies the project rather than granting authority.
+Most Supabase applications ship it in the bundle for exactly that reason.
+
+The project owner asked for nothing sensitive in the frontend, so the
+credentials moved server-side instead. The environment variables deliberately
+carry no `VITE_` prefix, because Vite only inlines prefixed values; that naming
+is the mechanism, not a convention.
+
+**What was considered and rejected:**
+
+- *Obfuscating the key in the bundle.* Not security. Anything the browser can
+  decode, a reader can decode.
+- *Restricting by HTTP referer.* Trivially forged, and it breaks the installed
+  progressive web app.
+- *Doing nothing and explaining that the anon key is safe.* Defensible, and it
+  is what the Supabase documentation recommends, but it does not answer the
+  requirement that was actually stated.
+
+**What was built:** a single catch-all Vercel Function. The browser calls its
+own origin; the function attaches the URL and key. The user's JWT passes
+through untouched, so per-user policies behave identically.
+
+The honest accounting, which is written into the README as well: this does not
+harden the data. The proxy is callable without a key, so Row Level Security is
+still what protects every row. What it does deliver is credentials absent from
+the shipped artefacts, rotatable without a rebuild, and reachable only through
+an explicit three-prefix allowlist that is covered by unit tests.
+
+The cost is one function invocation per query. On the Vercel Hobby plan that is
+worth watching as usage grows; the function is pinned to `bom1` so the extra
+hop to a Mumbai Supabase project stays in single-digit milliseconds.
+
+Realtime subscriptions would not survive this proxy, since it does not forward
+WebSockets. The product does not use realtime, so nothing is lost today; adding
+it later would mean either exempting realtime from the proxy or upgrading the
+function to handle the upgrade handshake.
+
 ## Storage is behind an adapter
 
 Photos go to Supabase Storage today because it is free at the starting tier.

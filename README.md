@@ -29,13 +29,15 @@ managers and owners see progress, delays, spend, idle equipment) leads to act
 | Forms | react-hook-form with zod resolvers |
 | Dates | date-fns |
 | Tests | Vitest |
-| Hosting | Vercel |
+| Hosting | Vercel, with one serverless function as the credential proxy |
 
 ---
 
 ## Repository layout
 
 ```
+api/
+  supabase/     the credential proxy: the only route to the database
 src/
   app/          router, providers, guards, error boundary
   config/       env, constants, routes, navigation
@@ -132,6 +134,36 @@ trusted alone.
 
 ---
 
+## Credentials
+
+**No Supabase credential reaches the browser.** The project URL and the anon key
+live only in server-side environment variables — note they carry no `VITE_`
+prefix, which is precisely what keeps them out of the bundle, since Vite only
+inlines `VITE_` prefixed values.
+
+The browser talks exclusively to `/api/supabase/*` on its own origin. The
+function at `api/supabase/[...path].ts` attaches the real URL and key and
+forwards the request; in development, `vite.config.ts` reproduces the same
+behaviour so the two environments match.
+
+The signed-in user's own JWT passes straight through, so Row Level Security
+still scopes every query to that person.
+
+**Be clear about what this does and does not buy.** Row Level Security remains
+the security boundary. The proxy endpoint is reachable without a key, exactly as
+the anon key would have been, so the policies in `0003_rls.sql` are still doing
+the real work. What the proxy genuinely provides:
+
+- nothing sensitive in the bundle, the source maps or the page source
+- credentials rotatable in Vercel without a rebuild
+- a single choke point that can later be rate limited or firewalled
+- an explicit allowlist, so only `rest/v1`, `auth/v1` and `storage/v1` are
+  reachable at all
+
+The cost is one function invocation per database call and a few milliseconds of
+extra latency, which is why the function is pinned to Mumbai (`bom1`) to sit
+beside a Supabase project in `ap-south-1`.
+
 ## Photo storage
 
 Photos go to Supabase Storage, which is free at the tier this product starts on.
@@ -155,7 +187,9 @@ client side routing, asset caching and security headers.
 
 1. Push this repository to GitHub
 2. Import it on Vercel; the Vite preset is detected automatically
-3. Add the environment variables from `.env.example` in project settings
+3. Add the environment variables from `.env.example` in project settings.
+   `SUPABASE_URL` and `SUPABASE_ANON_KEY` are **server only** and must not be
+   given a `VITE_` prefix, or they will end up in the bundle
 4. Add your subdomain under **Settings, Domains**
 
 ---

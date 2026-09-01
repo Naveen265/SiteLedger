@@ -23,15 +23,36 @@
    routing rewrites, asset caching and security headers.
 3. Add these environment variables for **all** environments:
 
-   | Key | Value |
-   | --- | --- |
-   | `VITE_SUPABASE_URL` | your Supabase project URL |
-   | `VITE_SUPABASE_ANON_KEY` | your anon public key |
-   | `VITE_SITE_URL` | your production URL |
-   | `VITE_AUTH_PHONE_ENABLED` | `false` |
-   | `VITE_STORAGE_PROVIDER` | `supabase` |
+   | Key | Value | Reaches the browser |
+   | --- | --- | --- |
+   | `SUPABASE_URL` | your Supabase project URL | **no** |
+   | `SUPABASE_ANON_KEY` | your anon public key | **no** |
+   | `VITE_SITE_URL` | your production URL | yes |
+   | `VITE_AUTH_PHONE_ENABLED` | `false` | yes |
+   | `VITE_STORAGE_PROVIDER` | `supabase` | yes |
+
+   The first two carry **no** `VITE_` prefix, and that is deliberate. Vite only
+   inlines `VITE_` prefixed variables into the bundle, so the absence of the
+   prefix is what keeps the credentials on the server. Adding one would publish
+   them.
 
 4. Deploy.
+
+### Verifying the credentials are not exposed
+
+After the first deployment, from the project root:
+
+```bash
+npm run build
+grep -r "supabase.co" dist/ | grep -v "\*.supabase.co"
+```
+
+This should return nothing. The one permitted match, `*.supabase.co`, is a
+wildcard string inside the Supabase library itself, not your project.
+
+In the browser, open DevTools, Network, and sign in. Every request should go to
+your own domain under `/api/supabase/...`. No request should be addressed to a
+`.supabase.co` host.
 
 ## Subdomain
 
