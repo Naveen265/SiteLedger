@@ -56,6 +56,21 @@ export default defineConfig(({ command, mode }) => {
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+
+        // A new build must take over immediately. Without these, the previous
+        // service worker keeps serving the old application shell until every
+        // tab is closed, so a deployed fix appears not to have deployed. That
+        // cost a full debugging cycle: the server was correct and the browser
+        // was running week-old JavaScript.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+
+        // The proxy must never be answered from the cache or fall back to the
+        // application shell; these carry per-user data and must reach the
+        // network every time.
+        navigateFallbackDenylist: [/^\/api\//],
+
         runtimeCaching: [
           {
             // Uploaded photos already viewed: serve from cache for 30 days.
@@ -65,6 +80,11 @@ export default defineConfig(({ command, mode }) => {
               cacheName: 'siteledger-media',
               expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
+          },
+          {
+            // Everything else through the proxy is per-user and never cached.
+            urlPattern: /\/api\/supabase\/.*/i,
+            handler: 'NetworkOnly',
           },
         ],
       },
