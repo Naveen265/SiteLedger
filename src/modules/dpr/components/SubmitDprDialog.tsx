@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { subDays } from 'date-fns';
 import { Dialog } from '@/components/ui/Dialog';
 import { useTranslate } from '@/contexts/I18nContext';
@@ -8,6 +9,7 @@ import { useTasks } from '@/modules/tasks/hooks/useTasks';
 import { useAttendance } from '@/modules/labour/hooks/useLabour';
 import { useStockMovements } from '@/modules/materials/hooks/useMaterials';
 import { useAssets } from '@/modules/equipment/hooks/useEquipment';
+import { routes } from '@/config/routes';
 import { DprForm } from './DprForm';
 import { useSubmitDpr, useTodaysDpr } from '../hooks/useDpr';
 
@@ -26,6 +28,7 @@ export function SubmitDprDialog({
 }) {
   const t = useTranslate();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const today = todayIso();
 
   const tasksQuery = useTasks(projectId);
@@ -87,8 +90,17 @@ export function SubmitDprDialog({
         stockIssues={todaysIssues}
         assets={siteAssets}
         isLoading={tasksQuery.isLoading || attendanceQuery.isLoading}
-        isSubmitting={submit.isPending}
         onSubmit={onSubmit}
+        // Shown only when the block is empty, so the engineer is never left
+        // looking at "no attendance recorded" with no way to act on it.
+        onMarkAttendance={() => {
+          onClose();
+          navigate(routes.siteAttendance);
+        }}
+        onIssueMaterial={() => {
+          onClose();
+          navigate(routes.materials(projectId));
+        }}
       />
     </Dialog>
   );

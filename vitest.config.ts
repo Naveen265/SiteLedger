@@ -5,8 +5,10 @@ import path from 'node:path';
 export default defineConfig({
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   test: {
-    environment: 'node',
+    // jsdom so component behaviour, not just pure logic, can be tested.
+    environment: 'jsdom',
+    setupFiles: ['./src/test-setup.ts'],
     // The proxy under api/ is security-relevant, so it is covered too.
-    include: ['src/**/*.test.ts', 'api/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'api/**/*.test.ts'],
   },
 });

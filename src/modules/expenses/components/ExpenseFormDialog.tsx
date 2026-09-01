@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { expenseSchema, type ExpenseInput } from '@/lib/validation';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -47,7 +48,7 @@ export function ExpenseFormDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void onSubmit()} isLoading={create.isPending}>{t('common.submit')}</Button>
+          <AsyncButton onClick={onSubmit}>{t('common.submit')}</AsyncButton>
         </>
       }
     >

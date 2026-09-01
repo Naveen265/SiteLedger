@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { assetSchema, type AssetInput } from '@/lib/validation';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Explain } from '@/components/patterns/InfoTip';
@@ -76,7 +77,7 @@ export function AssetFormDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void onSubmit()} isLoading={save.isPending}>{t('common.save')}</Button>
+          <AsyncButton onClick={onSubmit}>{t('common.save')}</AsyncButton>
         </>
       }
     >

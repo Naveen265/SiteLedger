@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { vendorSchema, type VendorInput } from '@/lib/validation';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { useTranslate } from '@/contexts/I18nContext';
 import { useCreateVendor } from '../hooks/useProcurement';
@@ -33,7 +34,7 @@ export function VendorDialog({ open, onClose }: { open: boolean; onClose: () => 
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void onSubmit()} isLoading={create.isPending}>{t('common.save')}</Button>
+          <AsyncButton onClick={onSubmit}>{t('common.save')}</AsyncButton>
         </>
       }
     >

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { issueSchema, type IssueInput } from '@/lib/validation';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -54,9 +55,9 @@ export function ReportIssueDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button size="lg" onClick={() => void onSubmit()} isLoading={create.isPending}>
+          <AsyncButton size="lg" onClick={onSubmit}>
             {t('common.submit')}
-          </Button>
+          </AsyncButton>
         </>
       }
     >

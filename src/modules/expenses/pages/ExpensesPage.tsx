@@ -6,6 +6,7 @@ import { DataTable, type Column } from '@/components/patterns/DataTable';
 import { FilterBar, FilterSelect } from '@/components/patterns/FilterBar';
 import { MetricTile } from '@/components/patterns/MetricTile';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslate } from '@/contexts/I18nContext';
@@ -92,21 +93,29 @@ export function ExpensesPage() {
         render: (expense) =>
           expense.status === 'submitted' && can('expense.approve') ? (
             <div className="flex justify-end gap-2">
-              <Button
+              {/* Each row owns its own pending state, so approving one
+                  expense does not spin every other row's buttons. */}
+              <AsyncButton
                 size="sm"
                 variant="secondary"
                 icon={<X className="size-3.5" />}
-                onClick={() => decide.mutate({ expenseId: expense.id, decision: 'rejected' })}
+                stopPropagation
+                onClick={() =>
+                  decide.mutateAsync({ expenseId: expense.id, decision: 'rejected' })
+                }
               >
                 {t('common.reject')}
-              </Button>
-              <Button
+              </AsyncButton>
+              <AsyncButton
                 size="sm"
                 icon={<Check className="size-3.5" />}
-                onClick={() => decide.mutate({ expenseId: expense.id, decision: 'approved' })}
+                stopPropagation
+                onClick={() =>
+                  decide.mutateAsync({ expenseId: expense.id, decision: 'approved' })
+                }
               >
                 {t('common.approve')}
-              </Button>
+              </AsyncButton>
             </div>
           ) : null,
       },
@@ -151,8 +160,12 @@ export function ExpensesPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
+        {/* Deliberately not "spend to date": that figure on the dashboard also
+            includes labour, materials and equipment. This one is expenses
+            alone, and sharing a label would make two different numbers look
+            like a contradiction. */}
         <MetricTile
-          label={t('dashboard.spendToDate')}
+          label={t('expenses.approvedTotal')}
           value={formatPaise(approvedPaise)}
           explain="spendByCategory"
           isLoading={isLoading}

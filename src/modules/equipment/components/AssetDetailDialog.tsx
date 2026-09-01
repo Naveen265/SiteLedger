@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { subDays } from 'date-fns';
 import { ArrowRightLeft, LogOut, Undo2, Wrench } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
-import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { StatusChip } from '@/components/ui/StatusChip';
@@ -46,8 +46,12 @@ export function AssetDetailDialog({
     [asset, movements],
   );
 
-  /** Performs a movement, guarding against checking out an allocated asset. */
-  const performMove = (movementType: AssetMovementType) => {
+  /**
+   * Performs a movement, guarding against checking out an allocated asset.
+   * Awaited so the button that was pressed stays busy until it settles; the
+   * five buttons here share one mutation, so its pending flag cannot be used.
+   */
+  const performMove = async (movementType: AssetMovementType) => {
     if (!asset) return;
 
     if (movementType === 'checkout' && asset.current_project_id) {
@@ -59,7 +63,7 @@ export function AssetDetailDialog({
       return;
     }
 
-    move.mutate({
+    await move.mutateAsync({
       asset,
       movementType,
       toProjectId:
@@ -130,37 +134,37 @@ export function AssetDetailDialog({
 
             <div className="flex flex-wrap gap-2">
               {!asset.current_project_id && (
-                <Button size="sm" icon={<LogOut className="size-3.5" />} onClick={() => performMove('checkout')}>
+                <AsyncButton size="sm" icon={<LogOut className="size-3.5" />} onClick={() => performMove('checkout')}>
                   {t('equipment.checkOut')}
-                </Button>
+                </AsyncButton>
               )}
               {asset.current_project_id && (
-                <Button
+                <AsyncButton
                   size="sm"
                   icon={<ArrowRightLeft className="size-3.5" />}
                   onClick={() => performMove('transfer')}
                 >
                   {t('equipment.transfer')}
-                </Button>
+                </AsyncButton>
               )}
-              <Button
+              <AsyncButton
                 size="sm"
                 variant="secondary"
                 icon={<Undo2 className="size-3.5" />}
                 onClick={() => performMove('return_to_yard')}
               >
                 {t('equipment.returnToYard')}
-              </Button>
+              </AsyncButton>
               {asset.ownership === 'rented' && (
-                <Button
+                <AsyncButton
                   size="sm"
                   variant="secondary"
                   onClick={() => performMove('return_to_vendor')}
                 >
                   {t('equipment.returnToVendor')}
-                </Button>
+                </AsyncButton>
               )}
-              <Button
+              <AsyncButton
                 size="sm"
                 variant="secondary"
                 icon={<Wrench className="size-3.5" />}
@@ -169,7 +173,7 @@ export function AssetDetailDialog({
                 {asset.status === 'under_repair'
                   ? t('equipment.markRepairDone')
                   : t('equipment.markUnderRepair')}
-              </Button>
+              </AsyncButton>
             </div>
           </div>
 

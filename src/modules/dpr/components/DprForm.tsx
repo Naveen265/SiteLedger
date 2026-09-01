@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Camera, ClipboardList, Package, Users, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
 import { Progress } from '@/components/ui/Progress';
@@ -25,7 +26,7 @@ import { calculateHeadcount } from '@/lib/calc/labour';
  * and stored, so the sub sixty second target is a number, not an assumption.
  */
 export function DprForm({
-  tasks, attendance, stockIssues, assets, isLoading, isSubmitting, onSubmit,
+  tasks, attendance, stockIssues, assets, isLoading, onSubmit,
   onMarkAttendance, onIssueMaterial,
 }: {
   tasks: Task[];
@@ -33,8 +34,8 @@ export function DprForm({
   stockIssues: StockMovement[];
   assets: Asset[];
   isLoading?: boolean;
-  isSubmitting?: boolean;
-  onSubmit: (values: DprInput, photoPaths: string[], timingSeconds: number) => void;
+  /** Awaited, so the submit button stays busy for the whole write. */
+  onSubmit: (values: DprInput, photoPaths: string[], timingSeconds: number) => void | Promise<unknown>;
   onMarkAttendance?: () => void;
   onIssueMaterial?: () => void;
 }) {
@@ -61,7 +62,7 @@ export function DprForm({
   /** Collects the form into the submit shape and reports the elapsed time. */
   const submit = () => {
     const timingSeconds = Math.round((Date.now() - (openedAt.current ?? Date.now())) / 1000);
-    onSubmit(
+    return onSubmit(
       {
         report_date: todayIso(),
         note: note || undefined,
@@ -240,9 +241,9 @@ export function DprForm({
         </div>
       </Card>
 
-      <Button size="lg" fullWidth icon={<Camera className="size-4" />} onClick={submit} isLoading={isSubmitting}>
+      <AsyncButton size="lg" fullWidth icon={<Camera className="size-4" />} onClick={submit}>
         {t('dpr.submit')}
-      </Button>
+      </AsyncButton>
     </div>
   );
 }

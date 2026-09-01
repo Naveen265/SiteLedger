@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { materialItemSchema, type MaterialItemInput } from '@/lib/validation';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useTranslate } from '@/contexts/I18nContext';
@@ -35,7 +36,7 @@ export function MaterialItemDialog({ open, onClose }: { open: boolean; onClose: 
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void onSubmit()} isLoading={save.isPending}>{t('common.save')}</Button>
+          <AsyncButton onClick={onSubmit}>{t('common.save')}</AsyncButton>
         </>
       }
     >

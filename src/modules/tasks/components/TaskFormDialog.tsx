@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { taskSchema, type TaskInput } from '@/lib/validation';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -67,7 +68,7 @@ export function TaskFormDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void onSubmit()} isLoading={save.isPending}>{t('common.save')}</Button>
+          <AsyncButton onClick={onSubmit}>{t('common.save')}</AsyncButton>
         </>
       }
     >

@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/patterns/PageHeader';
 import { EmptyState } from '@/components/patterns/EmptyState';
 import { ErrorState } from '@/components/patterns/ErrorState';
 import { ListSkeleton } from '@/components/skeletons';
-import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Card } from '@/components/ui/Card';
 import { Tabs } from '@/components/ui/Tabs';
 import { useTranslate } from '@/contexts/I18nContext';
@@ -44,15 +44,14 @@ export function NotificationsPage() {
         title={t('notifications.title')}
         actions={
           unreadCount > 0 && (
-            <Button
+            <AsyncButton
               variant="secondary"
               size="sm"
               icon={<CheckCheck className="size-3.5" />}
-              onClick={() => markAllRead.mutate()}
-              isLoading={markAllRead.isPending}
+              onClick={() => markAllRead.mutateAsync()}
             >
               {t('notifications.markAllRead')}
-            </Button>
+            </AsyncButton>
           )
         }
       />

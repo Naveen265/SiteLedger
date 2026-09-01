@@ -1,6 +1,6 @@
 import { Check, Package, X } from 'lucide-react';
 import { DataTable, type Column } from '@/components/patterns/DataTable';
-import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { Explain } from '@/components/patterns/InfoTip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,21 +62,27 @@ export function RequestApprovalList({ projectIds }: { projectIds: string[] }) {
       render: (request) =>
         request.status === 'submitted' && can('material.approve') ? (
           <div className="flex justify-end gap-2">
-            <Button
+            <AsyncButton
               size="sm"
               variant="secondary"
               icon={<X className="size-3.5" />}
-              onClick={() => decide.mutate({ requestId: request.id, decision: 'rejected' })}
+              stopPropagation
+              onClick={() =>
+                decide.mutateAsync({ requestId: request.id, decision: 'rejected' })
+              }
             >
               {t('common.reject')}
-            </Button>
-            <Button
+            </AsyncButton>
+            <AsyncButton
               size="sm"
               icon={<Check className="size-3.5" />}
-              onClick={() => decide.mutate({ requestId: request.id, decision: 'approved' })}
+              stopPropagation
+              onClick={() =>
+                decide.mutateAsync({ requestId: request.id, decision: 'approved' })
+              }
             >
               {t('common.approve')}
-            </Button>
+            </AsyncButton>
           </div>
         ) : null,
     },

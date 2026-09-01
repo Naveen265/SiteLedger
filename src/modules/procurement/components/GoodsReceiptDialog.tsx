@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { PhotoUploader, type UploadedPhoto } from '@/components/patterns/PhotoUploader';
@@ -78,7 +79,7 @@ export function GoodsReceiptDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void submit()} isLoading={record.isPending}>{t('common.save')}</Button>
+          <AsyncButton onClick={submit}>{t('common.save')}</AsyncButton>
         </>
       }
     >

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -95,9 +96,9 @@ export function PurchaseOrderDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void submit()} isLoading={create.isPending} disabled={!vendorId}>
+          <AsyncButton onClick={submit} disabled={!vendorId}>
             {t('common.save')}
-          </Button>
+          </AsyncButton>
         </>
       }
     >

@@ -39,8 +39,7 @@ export function SiteAttendancePage() {
         workers={workersQuery.data ?? []}
         existing={attendanceQuery.data ?? []}
         isLoading={workersQuery.isLoading || attendanceQuery.isLoading}
-        isSaving={save.isPending}
-        onSave={(marks) => save.mutate(marks)}
+        onSave={(marks) => save.mutateAsync(marks)}
       />
     </div>
   );

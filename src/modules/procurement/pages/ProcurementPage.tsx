@@ -8,6 +8,7 @@ import { ChartCard } from '@/components/charts/ChartCard';
 import { ChartTooltip } from '@/components/charts/ChartTooltip';
 import { axisProps, chartTheme } from '@/components/charts/theme';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { StatusChip, type StatusTone } from '@/components/ui/StatusChip';
 import { Tabs } from '@/components/ui/Tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,14 +98,15 @@ export function ProcurementPage() {
         render: (order) => (
           <div className="flex justify-end gap-2">
             {order.status === 'pending_approval' && can('po.approve') && (
-              <Button
+              <AsyncButton
                 size="sm"
                 variant="secondary"
                 icon={<CheckCircle2 className="size-3.5" />}
-                onClick={(event) => { event.stopPropagation(); approve.mutate(order.id); }}
+                stopPropagation
+                onClick={() => approve.mutateAsync(order.id)}
               >
                 {t('common.approve')}
-              </Button>
+              </AsyncButton>
             )}
             {(order.status === 'approved' || order.status === 'partially_received') &&
               can('stock.receive') && (

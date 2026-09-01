@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle2, Send } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
-import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Progress } from '@/components/ui/Progress';
 import { Textarea } from '@/components/ui/Textarea';
 import { Avatar } from '@/components/ui/Avatar';
@@ -74,18 +74,17 @@ export function TaskDetailDialog({
         task && (
           <>
             {progress !== null && (
-              <Button variant="secondary" onClick={() => void saveProgress()} isLoading={save.isPending}>
+              <AsyncButton variant="secondary" onClick={saveProgress}>
                 {t('common.save')}
-              </Button>
+              </AsyncButton>
             )}
             {canVerify && task.status !== 'verified' && (
-              <Button
+              <AsyncButton
                 icon={<CheckCircle2 className="size-4" />}
-                onClick={() => verify.mutate(task.id)}
-                isLoading={verify.isPending}
+                onClick={() => verify.mutateAsync(task.id)}
               >
                 {t('tasks.verify')}
-              </Button>
+              </AsyncButton>
             )}
           </>
         )
@@ -197,16 +196,18 @@ export function TaskDetailDialog({
                 value={commentBody}
                 onChange={(event) => setCommentBody(event.target.value)}
               />
-              <Button
+              <AsyncButton
                 icon={<Send className="size-4" />}
                 disabled={!commentBody.trim()}
-                onClick={() => {
-                  addComment.mutate(commentBody);
+                onClick={async () => {
+                  // Cleared only after the write succeeds, so a failure does
+                  // not silently discard what the user typed.
+                  await addComment.mutateAsync(commentBody);
                   setCommentBody('');
                 }}
               >
                 {t('common.addComment')}
-              </Button>
+              </AsyncButton>
             </div>
           </div>
         </div>

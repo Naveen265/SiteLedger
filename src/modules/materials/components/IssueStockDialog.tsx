@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { stockIssueSchema, type StockIssueInput } from '@/lib/validation';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -52,7 +53,7 @@ export function IssueStockDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void onSubmit()} isLoading={issue.isPending}>{t('common.save')}</Button>
+          <AsyncButton onClick={onSubmit}>{t('common.save')}</AsyncButton>
         </>
       }
     >

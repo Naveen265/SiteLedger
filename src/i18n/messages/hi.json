@@ -409,7 +409,8 @@
       "submitted": "जमा किया",
       "approved": "मंजूर",
       "rejected": "अस्वीकृत"
-    }
+    },
+    "approvedTotal": "मंजूर खर्च"
   },
   "documents": {
     "title": "दस्तावेज़",

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle2, Send } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
-import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Textarea } from '@/components/ui/Textarea';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusChip } from '@/components/ui/StatusChip';
@@ -64,18 +64,17 @@ export function IssueDetailDialog({
         issue && (
           <>
             {issue.status === 'resolved' && can('issue.close') && (
-              <Button onClick={() => close.mutate()} isLoading={close.isPending}>
+              <AsyncButton onClick={() => close.mutateAsync()}>
                 {t('issues.status.closed')}
-              </Button>
+              </AsyncButton>
             )}
             {issue.status !== 'resolved' && issue.status !== 'closed' && can('issue.resolve') && (
-              <Button
+              <AsyncButton
                 icon={<CheckCircle2 className="size-4" />}
-                onClick={() => void submitResolution()}
-                isLoading={resolve.isPending}
+                onClick={submitResolution}
               >
                 {t('issues.status.resolved')}
-              </Button>
+              </AsyncButton>
             )}
           </>
         )
@@ -165,13 +164,16 @@ export function IssueDetailDialog({
                 value={commentBody}
                 onChange={(event) => setCommentBody(event.target.value)}
               />
-              <Button
+              <AsyncButton
                 icon={<Send className="size-4" />}
                 disabled={!commentBody.trim()}
-                onClick={() => { addComment.mutate(commentBody); setCommentBody(''); }}
+                onClick={async () => {
+                  await addComment.mutateAsync(commentBody);
+                  setCommentBody('');
+                }}
               >
                 {t('common.addComment')}
-              </Button>
+              </AsyncButton>
             </div>
           </div>
         </div>

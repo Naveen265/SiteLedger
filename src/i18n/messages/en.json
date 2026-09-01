@@ -409,7 +409,8 @@
       "submitted": "Submitted",
       "approved": "Approved",
       "rejected": "Rejected"
-    }
+    },
+    "approvedTotal": "Approved expenses"
   },
   "documents": {
     "title": "Documents",

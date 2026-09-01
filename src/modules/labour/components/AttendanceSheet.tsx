@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CheckCheck, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { AsyncButton } from '@/components/ui/AsyncButton';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -22,13 +23,13 @@ import type { AttendanceMark } from '../api/labourApi';
 type DayValue = '1' | '0.5' | '0';
 
 export function AttendanceSheet({
-  workers, existing, isLoading, isSaving, onSave, emptyAction,
+  workers, existing, isLoading, onSave, emptyAction,
 }: {
   workers: Worker[];
   existing: Attendance[];
   isLoading?: boolean;
-  isSaving?: boolean;
-  onSave: (marks: AttendanceMark[]) => void;
+  /** Awaited, so the save button stays busy until the write settles. */
+  onSave: (marks: AttendanceMark[]) => void | Promise<unknown>;
   emptyAction?: React.ReactNode;
 }) {
   const t = useTranslate();
@@ -87,7 +88,7 @@ export function AttendanceSheet({
   );
 
   /** Hands every worker's mark to the caller as one batch. */
-  const save = () => {
+  const save = () =>
     onSave(
       workers.map((worker) => ({
         worker_id: worker.id,
@@ -95,7 +96,6 @@ export function AttendanceSheet({
         overtime_hours: marks[worker.id]?.overtime ?? 0,
       })),
     );
-  };
 
   if (isLoading) return <ListSkeleton rows={6} />;
 
@@ -175,9 +175,9 @@ export function AttendanceSheet({
           {t('labour.halfDay')}
           <Explain name="halfDay" withFormula={false} />
         </p>
-        <Button size="lg" onClick={save} isLoading={isSaving}>
+        <AsyncButton size="lg" onClick={save}>
           {t('common.save')}
-        </Button>
+        </AsyncButton>
       </div>
     </Card>
   );

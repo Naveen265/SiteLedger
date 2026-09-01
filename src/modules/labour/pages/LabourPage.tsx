@@ -101,8 +101,7 @@ export function LabourPage() {
             workers={workers}
             existing={dayAttendanceQuery.data ?? []}
             isLoading={workersQuery.isLoading || dayAttendanceQuery.isLoading}
-            isSaving={saveAttendance.isPending}
-            onSave={(marks) => saveAttendance.mutate(marks)}
+            onSave={(marks) => saveAttendance.mutateAsync(marks)}
             emptyAction={addWorkerButton}
           />
 
