@@ -12,7 +12,6 @@ export const routes = {
   acceptInvite: '/accept-invite',
 
   company: '/company',
-  companySettings: '/company/settings',
   companyUsers: '/company/users',
 
   projects: '/projects',

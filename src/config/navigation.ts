@@ -1,6 +1,6 @@
 import {
   Building2, ClipboardList, FileText, HardHat, Package, Receipt, Truck,
-  TriangleAlert, Users, Wrench, LayoutDashboard, FolderOpen, BarChart3,
+  TriangleAlert, Users, Wrench, LayoutDashboard, FolderOpen, BarChart3, UserCog,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Role } from '@/types/enums';
@@ -27,6 +27,10 @@ export type NavItem = {
 export const COMPANY_NAV: NavItem[] = [
   { labelKey: 'nav.myCompany', icon: Building2, to: () => routes.company, roles: ['owner', 'accounts'] },
   { labelKey: 'nav.projects', icon: FolderOpen, to: () => routes.projects },
+  // Where an owner issues logins and resets passwords. Without this entry the
+  // screen has a route but no way to reach it by clicking, which is how it went
+  // unnoticed: walking routes by URL cannot detect an unreachable page.
+  { labelKey: 'nav.team', icon: UserCog, to: () => routes.companyUsers, roles: ['owner'] },
 ];
 
 /** Entries scoped to the currently selected project. */

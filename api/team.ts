@@ -1,11 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Buffer } from 'node:buffer';
 import process from 'node:process';
-// Imported rather than duplicated: the client derives the same address when
-// signing in, and two copies would eventually disagree and lock people out.
-import {
-  buildTeamEmail, isValidCompanyCode, isValidUsername,
-} from '../src/lib/auth/teamCredentials';
+// Imported from beside this function, not from src/: Vercel ships only what
+// sits inside api/, and reaching into src/ compiles but fails at runtime.
+// The .js extension is required: the output is ES modules, and Node will not
+// resolve an extensionless relative import at runtime.
+import { buildTeamEmail, isValidCompanyCode, isValidUsername } from './_credentials.js';
 
 /**
  * Owner-managed team accounts.

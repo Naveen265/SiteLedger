@@ -90,7 +90,6 @@ export function AppRouter() {
       >
         <Route path={routes.company} element={<CompanyOverviewPage />} />
         <Route path={routes.companyUsers} element={<CompanyUsersPage />} />
-        <Route path={routes.companySettings} element={<CompanyUsersPage />} />
         <Route path={routes.projects} element={<ProjectsListPage />} />
         <Route path="/projects/:projectId" element={<ProjectIndexRedirect />} />
         <Route path="/projects/:projectId/dashboard" element={<ProjectDashboardPage />} />

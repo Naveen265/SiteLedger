@@ -55,7 +55,14 @@ export default defineConfig(({ command, mode }) => {
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // index.html is deliberately NOT precached. Precaching it serves the
+        // application shell cache-first, which pins the browser to whichever
+        // build was current when the worker installed: a deployed fix then
+        // never reaches anyone until they clear site data. skipWaiting alone
+        // does not solve it, because the already-rendered page came from the
+        // old cache. Hashed assets below are safe to precache, since their
+        // names change whenever their contents do.
+        globPatterns: ['**/*.{js,css,svg,png,woff2}'],
 
         // A new build must take over immediately. Without these, the previous
         // service worker keeps serving the old application shell until every
@@ -66,12 +73,27 @@ export default defineConfig(({ command, mode }) => {
         clientsClaim: true,
         cleanupOutdatedCaches: true,
 
-        // The proxy must never be answered from the cache or fall back to the
-        // application shell; these carry per-user data and must reach the
-        // network every time.
-        navigateFallbackDenylist: [/^\/api\//],
+        // Workbox otherwise registers a NavigationRoute bound to a precached
+        // index.html, and registers it BEFORE the runtime rules below, so it
+        // wins for every navigation and serves the shell cache-first. That is
+        // the mechanism that kept serving a stale build after a deploy.
+        // Disabled here so the NetworkFirst rule below handles navigations;
+        // it falls back to its own cache when genuinely offline.
+        navigateFallback: undefined,
 
         runtimeCaching: [
+          {
+            // The shell comes from the network whenever the network answers,
+            // so a deploy is live on the next load. The cached copy is the
+            // offline fallback, not the default.
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'siteledger-shell',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 4 },
+            },
+          },
           {
             // Uploaded photos already viewed: serve from cache for 30 days.
             urlPattern: /\/storage\/v1\/object\/.*/i,

@@ -1,0 +1,17 @@
+{
+  "//": "Vercel compiles the functions in this folder with its own TypeScript pass, using the nearest tsconfig. Without this it picks up the root config, which carries no node types and an older lib, and the build fails on 'node:http' and on Error.cause.",
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
+  },
+  "include": ["."]
+}
