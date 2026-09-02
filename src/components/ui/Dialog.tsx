@@ -22,7 +22,21 @@ export function Dialog({
   size?: 'sm' | 'md' | 'lg';
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  // Held in a ref so the effect below can depend on `open` alone. Callers pass
+  // an inline arrow function, which is a new identity on every render; if the
+  // effect depended on it, every keystroke would tear the effect down and run
+  // it again, stealing focus back to the top of the dialog mid-typing.
+  //
+  // Updated in its own effect rather than during render: writing to a ref while
+  // rendering is unsafe under concurrent rendering, and this effect's deps are
+  // separate so it never disturbs the focus effect.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // Trap focus, restore it on close, and close on Escape.
   useEffect(() => {
@@ -33,7 +47,7 @@ export function Dialog({
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== 'Tab' || !panelRef.current) return;
@@ -55,19 +69,25 @@ export function Dialog({
     };
 
     document.addEventListener('keydown', onKeyDown);
-    // Focus the first control so a keyboard user is inside the dialog at once.
-    window.setTimeout(() => {
-      panelRef.current?.querySelector<HTMLElement>(
-        'input, select, textarea, button',
-      )?.focus();
+
+    // Focus the first field in the body, not the panel. Searching the whole
+    // panel finds the header's close button first in DOM order, which puts the
+    // caret nowhere and reads as the dialog fighting the user.
+    const focusTimer = window.setTimeout(() => {
+      const firstField = bodyRef.current?.querySelector<HTMLElement>(
+        'input:not([type="hidden"]), select, textarea',
+      );
+      (firstField ?? bodyRef.current)?.focus();
     }, 0);
 
     return () => {
+      window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = '';
       previouslyFocused.current?.focus();
     };
-  }, [open, onClose]);
+    // Deliberately only `open`: see onCloseRef above.
+  }, [open]);
 
   const t = useTranslate();
   if (!open) return null;
@@ -101,7 +121,7 @@ export function Dialog({
           <IconButton label={t('common.close')} icon={<X className="size-4" />} onClick={onClose} />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+        <div ref={bodyRef} className="flex-1 overflow-y-auto p-4">{children}</div>
 
         {footer && (
           <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">

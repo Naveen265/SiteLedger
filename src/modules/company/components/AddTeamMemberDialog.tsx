@@ -153,14 +153,14 @@ export function AddTeamMemberDialog({ open, onClose }: { open: boolean; onClose:
             onChange={(event) => setPassword(event.target.value)}
           />
           <Select
-            label={t('profile.yourRole')}
+            label={t('team.roleLabel')}
             options={ROLES.map((value) => ({ value, label: t(roleLabelKey(value)) }))}
             value={role}
             onChange={(event) => setRole(event.target.value as Role)}
           />
           {role === 'site' && (
             <Select
-              label={t('roles.site')}
+              label={t('team.levelLabel')}
               options={SITE_LEVELS.map((value) => ({ value, label: t(`roles.site_${value}`) }))}
               value={siteLevel}
               onChange={(event) => setSiteLevel(event.target.value as SiteLevel)}

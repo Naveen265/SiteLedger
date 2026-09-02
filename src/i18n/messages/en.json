@@ -624,6 +624,8 @@
     "projects": "Projects they can see",
     "noCode": "Set a company code before adding people.",
     "companyCode": "Company code",
-    "copyDetails": "Copy sign-in details"
+    "copyDetails": "Copy sign-in details",
+    "roleLabel": "Role",
+    "levelLabel": "Permission level"
   }
 }
